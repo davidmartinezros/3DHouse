@@ -22,7 +22,7 @@ export class RenderService {
 
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(45, width/height);
-        this.camera.position.set(0, 0, 100);
+        this.camera.position.set(-150, 150, 300);
 
         this.renderer = new THREE.WebGLRenderer({antialias: true});
         this.renderer.setPixelRatio(window.devicePixelRatio);
@@ -52,6 +52,9 @@ export class RenderService {
 
         // load lines
         this.loadLines();
+
+        // load rectangles
+        this.loadRectangles();
 
         // start animation
         this.animate();
@@ -84,7 +87,7 @@ export class RenderService {
     }
 
     public loadLines() {
-        Plotly.d3.csv('/source/3d-source.1.csv', (err, rows) => {
+        Plotly.d3.csv('/source/3d-lines.csv', (err, rows) => {
 
             for (var i = 0; i < rows.length; i++) {
                 
@@ -103,6 +106,55 @@ export class RenderService {
                 this.scene.add(lineCloud);
             }
         });
+    }
+
+    public loadRectangles() {
+        Plotly.d3.csv('/source/3d-rectangles.csv', (err, rows) => {
+
+            for (var i = 0; i < rows.length; i++) {
+                
+                console.log(rows[i]['x1'] + "," + rows[i]['y1'] + "," + rows[i]['z1']);
+                console.log(rows[i]['x2'] + "," + rows[i]['y2'] + "," + rows[i]['z2']);
+                console.log(rows[i]['x3'] + "," + rows[i]['y3'] + "," + rows[i]['z3']);
+                console.log(rows[i]['x4'] + "," + rows[i]['y4'] + "," + rows[i]['z4']);
+
+                //let point1 = new THREE.Vector3(0.0, 0.0, 0.0);
+                //let point2 = new THREE.Vector3(100.0, 100.0, 100.0);
+                let point1 = new THREE.Vector3(rows[i]['x1'], rows[i]['y1'], rows[i]['z1']);
+                let point2 = new THREE.Vector3(rows[i]['x2'], rows[i]['y2'], rows[i]['z2']);
+                let point3 = new THREE.Vector3(rows[i]['x3'], rows[i]['y3'], rows[i]['z3']);
+                let point4 = new THREE.Vector3(rows[i]['x4'], rows[i]['y4'], rows[i]['z4']);
+                let point5 = new THREE.Vector3(rows[i]['x5'], rows[i]['y5'], rows[i]['z5']);
+                let point6 = new THREE.Vector3(rows[i]['x6'], rows[i]['y6'], rows[i]['z6']);
+                
+                var vertices = new Float32Array( [
+	                rows[i]['x1'], rows[i]['y1'], rows[i]['z1'],
+	                rows[i]['x2'], rows[i]['y2'], rows[i]['z2'],
+	                rows[i]['x3'], rows[i]['y3'], rows[i]['z3'],
+                    rows[i]['x4'], rows[i]['y4'], rows[i]['z4'],
+                    rows[i]['x5'], rows[i]['y5'], rows[i]['z5'],
+                    rows[i]['x6'], rows[i]['y6'], rows[i]['z6']
+                ] );
+
+                var geometry = new THREE.BufferGeometry();
+                // create a simple square shape. We duplicate the top left and bottom right
+                // vertices because each vertex needs to appear once per triangle.
+
+                // itemSize = 3 because there are 3 values (components) per vertex
+                geometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+                var material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+                var mesh = new THREE.Mesh( geometry, material );
+
+                this.scene.add( mesh );
+            }
+        });
+    }
+
+    public loadBox() {
+        var geometry = new THREE.BoxGeometry( 1, 1, 1 );
+        var material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
+        var mesh = new THREE.Mesh( geometry, material );
+        this.scene.add( mesh );
     }
     
     /*public unpack(rows, key) {
