@@ -23,13 +23,14 @@ System.register([], function(exports_1, context_1) {
                     container.appendChild(this.renderer.domElement);
                     this.controls = new THREE.TrackballControls(this.camera, container);
                     // Sphere
-                    var textureLoader = new THREE.TextureLoader();
-                    textureLoader.load('assets/earth.jpg', function (t) {
-                        var geometry = new THREE.SphereGeometry(5, 50, 50);
-                        var material = new THREE.MeshLambertMaterial({ map: t });
-                        _this.sphere = new THREE.Mesh(geometry, material);
-                        _this.scene.add(_this.sphere);
-                    });
+                    /*const textureLoader = new THREE.TextureLoader();
+                    textureLoader.load('assets/earth.jpg', t => {
+                        let geometry = new THREE.SphereGeometry(5, 50, 50);
+                        let material = new THREE.MeshLambertMaterial({map: t});
+                        this.sphere = new THREE.Mesh(geometry, material);
+            
+                        this.scene.add(this.sphere);
+                    });*/
                     // Lights
                     var ambientLight = new THREE.AmbientLight(0xcccccc);
                     this.scene.add(ambientLight);
@@ -63,21 +64,25 @@ System.register([], function(exports_1, context_1) {
                 RenderService.prototype.loadLines = function () {
                     var _this = this;
                     Plotly.d3.csv('/source/3d-source.1.csv', function (err, rows) {
-                        //let point1 = new THREE.Vector3(0.0, 0.0, 0.0);
-                        //let point2 = new THREE.Vector3(100.0, 100.0, 100.0);
-                        var point1 = new THREE.Vector3(_this.unpack(rows, 'x1'), _this.unpack(rows, 'y1'), _this.unpack(rows, 'z1'));
-                        var point2 = new THREE.Vector3(_this.unpack(rows, 'x2'), _this.unpack(rows, 'y2'), _this.unpack(rows, 'z2'));
-                        var points = new THREE.Geometry();
-                        var pointsMaterial = new THREE.LineDashedMaterial({ color: 0xffffff });
-                        points.vertices.push(point1);
-                        points.vertices.push(point2);
-                        var lineCloud = new THREE.Line(points, pointsMaterial);
-                        _this.scene.add(lineCloud);
+                        for (var i = 0; i < rows.length; i++) {
+                            console.log(rows[i]['x1'] + "," + rows[i]['y1'] + "," + rows[i]['z1']);
+                            console.log(rows[i]['x2'] + "," + rows[i]['y2'] + "," + rows[i]['z2']);
+                            //let point1 = new THREE.Vector3(0.0, 0.0, 0.0);
+                            //let point2 = new THREE.Vector3(100.0, 100.0, 100.0);
+                            var point1 = new THREE.Vector3(rows[i]['x1'], rows[i]['y1'], rows[i]['z1']);
+                            var point2 = new THREE.Vector3(rows[i]['x2'], rows[i]['y2'], rows[i]['z2']);
+                            var points = new THREE.Geometry();
+                            var pointsMaterial = new THREE.LineDashedMaterial({ color: 0xffffff });
+                            points.vertices.push(point1);
+                            points.vertices.push(point2);
+                            var lineCloud = new THREE.Line(points, pointsMaterial);
+                            _this.scene.add(lineCloud);
+                        }
                     });
                 };
-                RenderService.prototype.unpack = function (rows, key) {
-                    return rows.map(function (row) { return row[key]; });
-                };
+                /*public unpack(rows, key) {
+                    return rows.map(row => row[key]);
+                }*/
                 RenderService.prototype.updateScale = function (newScale) {
                     var that = this;
                     new TWEEN.Tween({ scale: this.sphere.scale.x })
