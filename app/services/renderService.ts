@@ -3,6 +3,7 @@ import Scene = THREE.Scene;
 import TrackballControls = THREE.TrackballControls;
 import PerspectiveCamera = THREE.PerspectiveCamera;
 import Mesh = THREE.Mesh;
+import { Observable, Observer } from 'rxjs/Rx';
 
 declare var Plotly;
 
@@ -142,10 +143,24 @@ export class RenderService {
 
                 // itemSize = 3 because there are 3 values (components) per vertex
                 geometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
-                var material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
-                var mesh = new THREE.Mesh( geometry, material );
 
-                this.scene.add( mesh );
+                var obs: Observable<THREE.Object3D> = new Observable(observer => {
+                    // load a texture, set wrap mode to repeat
+                    new THREE.TextureLoader().load('/textures/water.jpg', function (texture) {
+                        console.log('texture:' + texture);
+
+                        texture.wrapS = THREE.RepeatWrapping;
+                        texture.wrapT = THREE.RepeatWrapping;
+                        texture.repeat.set(4, 4);
+
+                        var material = new THREE.MeshBasicMaterial({ map: texture });
+                        var mesh = new THREE.Mesh(geometry, material);
+                        observer.next(mesh);
+                        observer.complete();
+                    });
+                });
+
+                obs.subscribe(value => this.scene.add(value));
             }
         });
     }

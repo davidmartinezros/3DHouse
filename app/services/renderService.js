@@ -1,9 +1,13 @@
-System.register([], function(exports_1, context_1) {
+System.register(['rxjs/Rx'], function(exports_1, context_1) {
     "use strict";
     var __moduleName = context_1 && context_1.id;
+    var Rx_1;
     var WebGLRenderer, Scene, TrackballControls, PerspectiveCamera, Mesh, RenderService;
     return {
-        setters:[],
+        setters:[
+            function (Rx_1_1) {
+                Rx_1 = Rx_1_1;
+            }],
         execute: function() {
             RenderService = (function () {
                 function RenderService() {
@@ -111,9 +115,20 @@ System.register([], function(exports_1, context_1) {
                             // vertices because each vertex needs to appear once per triangle.
                             // itemSize = 3 because there are 3 values (components) per vertex
                             geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
-                            var material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-                            var mesh = new THREE.Mesh(geometry, material);
-                            _this.scene.add(mesh);
+                            var obs = new Rx_1.Observable(function (observer) {
+                                // load a texture, set wrap mode to repeat
+                                new THREE.TextureLoader().load('/textures/water.jpg', function (texture) {
+                                    console.log('texture:' + texture);
+                                    texture.wrapS = THREE.RepeatWrapping;
+                                    texture.wrapT = THREE.RepeatWrapping;
+                                    texture.repeat.set(4, 4);
+                                    var material = new THREE.MeshBasicMaterial({ map: texture });
+                                    var mesh = new THREE.Mesh(geometry, material);
+                                    observer.next(mesh);
+                                    observer.complete();
+                                });
+                            });
+                            obs.subscribe(function (value) { return _this.scene.add(value); });
                         }
                     });
                 };
