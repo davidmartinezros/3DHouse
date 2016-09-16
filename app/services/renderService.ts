@@ -14,8 +14,12 @@ export class RenderService {
     private renderer: WebGLRenderer;
     private controls: TrackballControls;
     private sphere: Mesh;
+    private material: THREE.MeshBasicMaterial;
+
+    private promise: Promise<string>;
 
     public init(container: HTMLElement) {
+
         this.addStats();
 
         const width = window.innerWidth;
@@ -112,6 +116,38 @@ export class RenderService {
     public loadRectangles() {
         Plotly.d3.csv('/source/3d-rectangles.csv', (err, rows) => {
 
+            var scene_tmp: Scene = this.scene;
+
+            function resolver(resolve, reject) {
+                // load a texture, set wrap mode to repeat
+                //setTimeout(function loadTexture() {
+                    new THREE.TextureLoader().load('/textures/water.jpg', 
+                        function (texture:THREE.Texture) {
+                        //console.log('texture:' + texture);
+
+                        texture.wrapS = THREE.RepeatWrapping;
+                        texture.wrapT = THREE.RepeatWrapping;
+                        texture.repeat.set(4, 4);
+
+                        resolve(texture);
+                    });
+                //}, 5000);
+            }
+
+            function loadMaterial(texture) {
+                console.log('texture AAA:' + texture.id);
+                var material = new THREE.MeshBasicMaterial({ map: texture });
+                console.log('UUU:' + material.id);
+                var mesh = new THREE.Mesh(geometry, material);
+                console.log('FFF:' + mesh.id);
+                scene_tmp.add(mesh);
+                console.log('fi BBB:' + scene_tmp.id);
+            }
+                
+            console.log('abans de crear Promise');
+            this.promise = new Promise(resolver);
+            console.log('despres de crear Promise');
+            
             for (var i = 0; i < rows.length; i++) {
                 
                 console.log(rows[i]['x1'] + "," + rows[i]['y1'] + "," + rows[i]['z1']);
@@ -144,27 +180,13 @@ export class RenderService {
                 // itemSize = 3 because there are 3 values (components) per vertex
                 geometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
 
-                var obs: Observable<THREE.Object3D> = new Observable(observer => {
-                    // load a texture, set wrap mode to repeat
-                    new THREE.TextureLoader().load('/textures/water.jpg', function (texture) {
-                        console.log('texture:' + texture);
-
-                        texture.wrapS = THREE.RepeatWrapping;
-                        texture.wrapT = THREE.RepeatWrapping;
-                        texture.repeat.set(4, 4);
-
-                        var material = new THREE.MeshBasicMaterial({ map: texture });
-                        var mesh = new THREE.Mesh(geometry, material);
-                        observer.next(mesh);
-                        observer.complete();
-                    });
-                });
-
-                obs.subscribe(value => this.scene.add(value));
+                console.log('anem a carregar material');
+                this.promise.then(loadMaterial);
+                console.log('hem carregat material');
             }
         });
     }
-
+    
     public loadBox() {
         var geometry = new THREE.BoxGeometry( 1, 1, 1 );
         var material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );

@@ -1,13 +1,9 @@
-System.register(['rxjs/Rx'], function(exports_1, context_1) {
+System.register([], function(exports_1, context_1) {
     "use strict";
     var __moduleName = context_1 && context_1.id;
-    var Rx_1;
     var WebGLRenderer, Scene, TrackballControls, PerspectiveCamera, Mesh, RenderService;
     return {
-        setters:[
-            function (Rx_1_1) {
-                Rx_1 = Rx_1_1;
-            }],
+        setters:[],
         execute: function() {
             RenderService = (function () {
                 function RenderService() {
@@ -89,6 +85,31 @@ System.register(['rxjs/Rx'], function(exports_1, context_1) {
                 RenderService.prototype.loadRectangles = function () {
                     var _this = this;
                     Plotly.d3.csv('/source/3d-rectangles.csv', function (err, rows) {
+                        var scene_tmp = _this.scene;
+                        function resolver(resolve, reject) {
+                            // load a texture, set wrap mode to repeat
+                            //setTimeout(function loadTexture() {
+                            new THREE.TextureLoader().load('/textures/water.jpg', function (texture) {
+                                //console.log('texture:' + texture);
+                                texture.wrapS = THREE.RepeatWrapping;
+                                texture.wrapT = THREE.RepeatWrapping;
+                                texture.repeat.set(4, 4);
+                                resolve(texture);
+                            });
+                            //}, 5000);
+                        }
+                        function loadMaterial(texture) {
+                            console.log('texture AAA:' + texture.id);
+                            var material = new THREE.MeshBasicMaterial({ map: texture });
+                            console.log('UUU:' + material.id);
+                            var mesh = new THREE.Mesh(geometry, material);
+                            console.log('FFF:' + mesh.id);
+                            scene_tmp.add(mesh);
+                            console.log('fi BBB:' + scene_tmp.id);
+                        }
+                        console.log('abans de crear Promise');
+                        _this.promise = new Promise(resolver);
+                        console.log('despres de crear Promise');
                         for (var i = 0; i < rows.length; i++) {
                             console.log(rows[i]['x1'] + "," + rows[i]['y1'] + "," + rows[i]['z1']);
                             console.log(rows[i]['x2'] + "," + rows[i]['y2'] + "," + rows[i]['z2']);
@@ -115,20 +136,9 @@ System.register(['rxjs/Rx'], function(exports_1, context_1) {
                             // vertices because each vertex needs to appear once per triangle.
                             // itemSize = 3 because there are 3 values (components) per vertex
                             geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
-                            var obs = new Rx_1.Observable(function (observer) {
-                                // load a texture, set wrap mode to repeat
-                                new THREE.TextureLoader().load('/textures/water.jpg', function (texture) {
-                                    console.log('texture:' + texture);
-                                    texture.wrapS = THREE.RepeatWrapping;
-                                    texture.wrapT = THREE.RepeatWrapping;
-                                    texture.repeat.set(4, 4);
-                                    var material = new THREE.MeshBasicMaterial({ map: texture });
-                                    var mesh = new THREE.Mesh(geometry, material);
-                                    observer.next(mesh);
-                                    observer.complete();
-                                });
-                            });
-                            obs.subscribe(function (value) { return _this.scene.add(value); });
+                            console.log('anem a carregar material');
+                            _this.promise.then(loadMaterial);
+                            console.log('hem carregat material');
                         }
                     });
                 };
